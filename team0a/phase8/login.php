@@ -2,7 +2,7 @@
 
 
 <body>
-	<form action="check-login.php">
+	<form action="check-login.php" method="post">
 		<input type="text" name="username">
 		<br><br>
 		<input type="password" name="password">
