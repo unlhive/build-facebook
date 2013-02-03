@@ -1,0 +1,39 @@
+body{
+    font-family: 'Julius Sans One', sans-serif;
+}
+#top-banner{
+ height:50px;
+ width: 100%;
+ background-color: #3b5998;
+ border-bottom: 1px solid #133783;
+}
+
+#top-banner-container{
+    width: 960px;
+    margin: 0 auto;
+    color: #eee;
+    font-size: 30px;
+    padding:10px;
+}
+
+#content-container{
+    width: 960px;
+    margin: 0 auto;
+}
+
+.profile-pic{
+    padding:15px;
+    float: left;
+}
+
+.profile-info{
+    padding: 15px;
+}
+
+.clear{
+	clear: both;
+}
+
+#login-form{
+	padding: 20px;
+}
