@@ -1,0 +1,257 @@
+<html>
+   <head>
+      <title>bRobot!</title>
+      
+      <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+      
+      
+      <!-- start writting CSS -->
+      <style type="text/css">
+      
+	  html, body{
+		  margin:0px;
+		  padding:0px;
+		  font-family: 'Fjalla One', sans-serif;
+		  color:#FFF;
+		  background-image:url(images/noisy_grid.png);
+		  }
+	
+
+	  #canvas, #graphics{
+		  position:absolute;
+		  top:0;
+		  left:0;}
+		  
+		 #graphics{
+			 
+			 } 
+			 
+		#mainMenu{
+			position:absolute;
+			margin:auto;
+			margin:5%;
+			width:90%;
+			min-height:90%;
+			background-color:rgba(100,100,100,.5);
+			background-image:url(images/controls.png);
+			background-position:bottom center;
+			background-repeat:no-repeat;
+			z-index:3;
+			}
+			
+		#lose{
+			position:absolute;
+			margin:25%;
+			width:50%;
+			height:auto;
+			display:none;
+			z-index:3;
+			background-color:rgba(100,100,100,.5);
+			}
+
+		.level{
+			float:left;
+			height:50px;
+			width:50px;
+			margin:2%;
+			background-color:#09C;
+			}
+			
+		.button{
+			text-align:center;
+			font-size:20px;
+			height:30px;
+			width:60%;
+			padding:5% 10%;
+			margin:10%;
+			background-color:rgba(100,100,100,.8);
+			};
+			
+      
+      </style>
+      
+   </head>
+   <body>
+   <!-- style menu element -->
+   <div id="mainMenu" class="menuItem"></div>
+   <div id="lose" class="menuItem">
+   <div class="button" onClick="init(currentLevel)">Retry Level</div><div class="button" onClick="quit()" >Quit to menu</div>
+   </div>
+   </body>
+   
+   <!-- make sure we've got everything!! -->
+   <script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
+      <script type="text/javascript" src="jquery.js"></script>
+      <script type="text/javascript" src="bRobot.js"></script>
+      <script type="text/javascript" src="controls.js"></script>
+      <script type="text/javascript" src="functions.js"></script>
+      <script type="text/javascript" src="WorldSetup.js"></script>
+      <script type="text/javascript" src="draw.js"></script>
+      <script type="text/javascript" src="hittests.js"></script>
+      <script type="text/javascript" src="levels.js"></script>
+      
+     
+   <script type="text/javascript">
+      
+	  //ready... go!
+	  
+      function init(level) {
+		  
+		currentLevel = level; // set current level to level for restart menu button.
+		  
+		$(".menuItem").css("display","none"); // hide all menu items with jquery.
+		  
+		$("#graphics").remove(); // remove any previous instances of out canvases
+		$("#canvas").remove();	// 
+
+		WH = $(window).height(); //set global variable for window height
+		WW = $(window).width();	// now width
+		  
+		  /*The bod2xweb library runs in meters. we have to draw to canvas in pixels.
+		  	we use these global variables throughout the system the scale back and forth
+			when necessary.		  
+		   */
+		  
+		scaledown = 1/30; 
+		scaleup = 30;
+		
+		// game specific variables
+		
+		boost = 100;  
+		ballSpeed = 10;
+		
+		rightLegDown = false;
+		leftLegDown = false;
+				
+		 loaded = true;
+		 
+		 playerWin = false;
+		 
+		playerDead = false; 
+		 
+		 landTime = 100;
+		 
+		 balls = [];
+		 
+		 // set up image object for drawing on canvas.
+		 
+		 brobotimg = new Image();
+		 brobotimg.src = "images/brobot.png";
+		 
+		 brobotflameimg = new Image();
+		 brobotflameimg.src = "images/brobot_flame.png";
+		 
+		 brobothead = new Image();
+		 brobothead.src = "images/head.png";
+		 
+		 
+		 start = new Image();
+		 start.src = "images/start.png";
+		 
+		 finish = new Image();
+		 finish.src = "images/finish.png";
+		 
+		 dead = new Image();
+		 dead.src = "images/deadhead.png";
+		 
+		 //create canvases
+			 
+		 $('body').append("<canvas id='canvas' width='"+WW+"' height='"+WH+"' ></canvas>");
+		  $('body').append("<canvas id='graphics' width='"+WW+"' height='"+WH+"'></canvas>");
+		  
+		  
+		  
+		  // make it so when you resize your window the canvas comes with you. I know that seems dumb. It's how you have to do it. 
+		  $(window).resize(function() {
+			  		$("#canvas").remove();
+					$("#graphics").remove();
+			  		 WH = $(window).height(); 
+					 WW = $(window).width();	
+  				 	$('body').append("<canvas id='canvas' width='"+WW+"' height='"+WH+"' ></canvas>");
+		  			$('body').append("<canvas id='graphics' width='"+WW+"' height='"+WH+"'></canvas>");
+					
+					 context = document.getElementById("canvas").getContext("2d"); 
+		  			gfx = document.getElementById("graphics").getContext("2d");
+			});
+		  
+		  
+		 // reset up controls after their removal
+		  
+			setUpControls();
+			
+		// setup box2dweb world. most of the game lives here.	
+          WorldSetup(level);
+         
+		 context = document.getElementById("canvas").getContext("2d"); //debug canvas.
+		  gfx = document.getElementById("graphics").getContext("2d"); // graphics canvas. where the art goes.
+		 
+         //setup debug draw
+         var debugDraw = new b2DebugDraw();
+			debugDraw.SetSprite(document.getElementById("canvas").getContext("2d"));
+			debugDraw.SetDrawScale(30.0);
+			debugDraw.SetFillAlpha(0.5);
+			debugDraw.SetLineThickness(1.0);
+			debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+			world.SetDebugDraw(debugDraw);
+			
+		// setup repeating function that advances the frame of the game 60 times per second. 
+         
+         run = setInterval(update, 1000 / 60);     
+		 
+		 // function to be stepped.   
+         
+         function update() {
+			 
+			 //do you moving to bro bot. 
+			 moveBot();//broBot.js
+
+			
+			//move world forward one frame. 
+            world.Step(1 / 60, 10, 10); 
+			
+			
+			
+			
+			// get player position... 
+			pp = player.GetPosition(); //box2dweb
+			px = pp.x;
+			py = pp.y;
+			
+			//draw to debug canvas. not needed in complete game. 
+			
+	/*		context.save();
+			context.clearRect(0,0,WW,WH);
+			context.translate((-pp.x*scaleup)+WW*.5,(-pp.y*scaleup)+WH*.5);
+            world.DrawDebugData();
+			context.restore();*/
+			
+			// tell my contact listeners to check for a contact.
+
+			world.SetContactListener(listener); //hittests.js
+			
+			// check to see if the player has won. 
+			
+			checkWin(); //functions.js
+			
+			
+
+			gfx.save(); //save current state of canvas.
+			gfx.clearRect(0,0,WW,WH); //clear canvas.
+			gfx.translate((-pp.x*scaleup)+WW*.5,(-pp.y*scaleup)+WH*.5); // move canvas to position of player so the camera follows the player.
+            draw(level); // draw the level
+			gfx.restore(); // put the canvas back the way it was. 
+
+            world.ClearForces(); // you need to do this i guess... 
+			
+         };
+
+
+      };
+	  
+	  
+	  
+   
+   </script>
+   
+   
+</html>
